@@ -1,0 +1,1631 @@
+//-----Функции относитильного размера и позиционирования на основе данных с макета-----
+
+	 $mockup-width: 1920px;  //Ширина экрана по макету
+	$mockup-height: 980px;   //Высота экрана по макету
+
+//Функции принимают значения на прямую с макета
+@mixin rel-width($abs-width) {
+	width: $abs-width / $mockup-width * 100%;
+}
+@mixin rel-height($abs-height) {
+	height: $abs-height / $mockup-height * 100%;
+}
+
+//Функция принимает значения высоты относительно макета
+@mixin rel-vp-height($abs-height) {
+	height: $abs-height / $mockup-height * 100vh;
+}
+
+//Функция относительной высоты внутри блока. Размеры блока и высоты беруться с макета.
+@mixin rel-block-height($abs-height, $block-height) {
+	height: $abs-height / $block-height * 100%;
+}
+
+@mixin rel-left($abs-left) {
+	left: $abs-left / $mockup-width * 100%;
+}
+@mixin rel-right($abs-right) {
+	right: $abs-right / $mockup-width * 100%;
+}
+@mixin rel-top($abs-top) {
+	top: $abs-top / $mockup-height * 100%;
+}
+@mixin rel-bottom($abs-bottom) {
+	bottom: $abs-bottom / $mockup-height * 100%;
+}
+//----------
+
+
+//Подключение сторонних шрифтов
+
+/* Шпаргалка по шрифтовым толщинам:
+	300 light
+	400 regular
+	700 bold
+---------- */
+
+@font-face {
+	font-family: 'ProximaNova';
+	src: url("../fonts/ProximaNova-Light.otf");
+	font-weight: 300;
+	font-style: normal;
+}
+@font-face {
+	font-family: 'ProximaNova';
+	src: url("../fonts/ProximaNova-Regular.otf");
+	font-weight: 400;
+	font-style: normal;
+}
+@font-face {
+	font-family: 'ProximaNova';
+	src: url("../fonts/ProximaNova-Bold.otf");
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'LibreBaskerville';
+	src: url("../fonts/LibreBaskerville-Regular.otf");
+	font-weight: 400;
+	font-style: normal;
+}
+@font-face {
+	font-family: 'LibreBaskerville';
+	src: url("../fonts/LibreBaskerville-Bold.otf");
+	font-weight: 700;
+	font-style: normal;
+}
+//----------
+
+//Типичные элементы: 
+	
+	//Цвета:
+	$col-gold: #d8af61; //Основной золотистый цвет
+	$col-dark-blue: #1c262c; //Основной темно синий
+
+	//Типичные свойства:
+	@mixin all-transition {transition: all 500ms ease;} //Общий стиль анимации на ховере
+	
+	//Анимация:
+	@keyframes cell-ani {
+		//Анимация для прямоугольников
+		100% {transform: translateY(110vh)}
+	}
+
+//----------	
+
+
+body {
+	margin: 0;
+	padding: 0;
+	font-family: 'ProximaNova', sans-serif;
+	font-weight: 300;
+	color: #1e272d;
+}
+
+//Стартовый экран
+.start-screen {
+	display: block;
+	position: relative;
+	left: 0;
+	right: 0;
+	top: 0;
+	width: 100%;
+	height: 100vh;
+	margin: 0;
+	color: #fff;
+	background: url("../img/background-1-min.jpg") 50% 50% / auto 100vh no-repeat #182229 ;
+	
+	&::before {
+		//Создает тонирование основного фона
+		content: "";
+		display: block;
+		position: absolute;
+		background: rgba(24, 34, 41, 0.97);
+		width: 100%;
+		height: 100%;
+	}
+
+	
+	//Создание сложного фона
+
+	&__crop {
+		//Эффект кадриррование фона
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		padding: 74px (81px / $mockup-width * 100%);
+		box-sizing: border-box;
+		background: url("../img/background-1-min.jpg") 50% 50% / auto 100vh no-repeat content-box;
+		
+		&::before {
+			//Создает тонирование внутрнеей части фона
+			content: "";
+			display: block;
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			padding: 74px (81px / $mockup-width * 100%);
+			box-sizing: border-box;
+			background: rgba(24, 34, 41, 0.7) content-box;
+		}
+	}
+	&__edge {
+		//Горизонтальные линии
+		position: absolute;
+		left: 0;
+		right: 0;
+		width: 100%;
+		height: 100%;
+		padding: 74px (283px / $mockup-width * 100%);
+		box-sizing: border-box;
+		//Флекс для равномерного распределения линий 
+		display: flex;
+		justify-content: space-between;
+		//----------
+		&-item {
+			//Вертикальная линия
+			width: 1px;
+			height: 100%;
+			background-color: rgba(255, 255, 255, 0.1);
+			z-index: 10;
+		}
+	}
+	&__animate {
+		//Блок с анимацией блоков
+		position: absolute;
+		left: 0;
+		right: 0;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		
+		&-cell {
+			//Контейнер для анимироканных прямоугольников. Нужен для того, чтобы скрывать прямоугольники в темной зоне фона
+			flex-grow: 1;
+			margin: 74px 0; 
+			box-sizing: border-box;
+			overflow: hidden;
+			
+			&-1 {
+				//Прямоугольник фона
+				position: relative;
+				@include rel-left(165px);
+				top: -1 * (229px / $mockup-height * 100vh);
+				@include rel-width(118px);
+				height: 229px / $mockup-height * 100vh;
+				background-color: rgba(255, 255, 255, 0.08); 
+				//Параметры анимации
+				animation-name: cell-ani;
+				animation-delay: 2s;
+				animation-duration: 24s;
+				animation-iteration-count: infinite;
+				animation-direction: normal;
+				animation-timing-function: cubic-bezier(0,.3,1,.7);
+			}
+			&-2 {
+				//Прямоугольник фона
+				position: relative;
+				@include rel-left(1636px);
+				top: -2 * (229px / $mockup-height * 100vh);
+				@include rel-width(118px);
+				height: 226px / $mockup-height * 100vh;
+				background-color: rgba(255, 255, 255, 0.08); 
+				//Параметры анимации
+				animation-name: cell-ani;
+				animation-delay: 4s;
+				animation-duration: 14s;
+				animation-iteration-count: infinite;
+				animation-direction: normal;
+				animation-timing-function: cubic-bezier(0,.3,1,.7);
+			}
+			&-3 {
+				//Прямоугольник фона
+				position: relative;
+				@include rel-left(960px);
+				top: -3 * (229px / $mockup-height * 100vh);
+				@include rel-width(118px);
+				height: 185px / $mockup-height * 100vh;
+				background-color: rgba(255, 255, 255, 0.1); 
+				//Параметры анимации
+				animation-name: cell-ani;
+				animation-delay: 0s;
+				animation-duration: 60s;
+				animation-iteration-count: infinite;
+				animation-direction: normal;
+				animation-timing-function: cubic-bezier(0,.3,1,.7);
+			}
+		}
+	}
+	//----------
+
+	&__logo {
+		//Логопи в главном меню
+		position: absolute;
+		@include rel-left(81px);
+		@include rel-top(23px);
+		width: 143px;
+		height: 36px;
+		margin: 0;
+		padding: 0;
+
+		&-img {
+			//Изображение логотипа
+			width: 143px;
+			height: 36px;
+		}
+	}
+
+	&__menu {
+		//Главное меню
+		position: absolute;
+		@include rel-right(175px);
+		@include rel-top(25px);
+		
+		&-item {
+			//Список меню
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			li {
+				//Элемент списка меню
+				display: inline-block;
+				padding: 0;
+				margin-left: 25px;
+				a {
+					//Ссылка в пункте меню
+					text-decoration: none;
+					font-family: 'ProximaNova', sans-serif;
+					font-weight: 400;
+					color: #fff;
+					text-transform: uppercase;
+					font-size: 12px;
+					
+					&::after {
+						//Черточка-ховер в обычном состоянии
+						content: "";
+						display: block;
+						width: 20px;
+						height: 1px;
+						margin-top: 0;
+						background-color: transition;
+						@include all-transition;
+					}
+					&:hover::after {
+						//Черточка-ховер при наведении на ссылку
+						transform: scaleY(3) translateY(3px);
+						background-color: #fff;
+					}
+				}
+				.active {
+					//Активный пункт меню
+					color: $col-gold;
+					
+					&::after {
+						//Черточка-ховер в обычном состоянии активного пункта
+						content: "";
+						display: block;
+						width: 20px;
+						height: 1px;
+						margin-top: 0;
+						transform: scaleY(3) translateY(3px);
+						background-color: $col-gold;
+					}
+					&:hover::after {
+						//Черточка-ховер при наведении на ссылку активного пункта
+						background-color: $col-gold;
+					}
+				}
+			}
+		}
+	}
+
+	&__search {
+		//Кнопка поиска
+		position: absolute;
+		@include rel-right(81px);
+		@include rel-top(25px);
+		margin-top: 4px;
+		margin-right: 4px;
+		width: 13px;
+		height: 13px;
+		box-sizing: border-box;
+		border-radius: 50%;
+		border: 2px solid #fff;
+		@include all-transition;
+		
+		&::after {
+			//Дополнительный кружек
+			content: "";
+			display: block;
+			width: 3px;
+			height: 3px;
+			margin-top: 8px;
+			margin-left: 12px;
+			border-radius: 50%;
+			background-color: #fff;
+		}
+		&:hover {
+			//Кнопка поиска при наведении
+			transform: scale(1.2);
+			transform-origin: 50% 50%;
+		}
+	}
+
+	&__info-slide {
+		//Информационный блок слайдера
+		z-index: 10; //Устанавливает объект поверх сложного фона
+		position: absolute;
+		left: 0;
+		right: 0;
+		@include rel-top(380px);
+		margin: 0 10%;
+		padding: 0;
+		text-align: center;
+		
+		&-title {
+			//Заголовок слайдера
+			margin: 0 0 12px;
+			color: $col-gold;
+			font-size: 54px / $mockup-width * 100vw;
+			font-family: "LibreBaskerville", serif;
+			font-weight: 700;
+			text-transform: uppercase;
+		}
+		&-text {
+			//Пояснительный текст
+			margin: 0 25% 52px;
+			font-size: 22px;
+			color: #e5e5e5;
+			font-weight: 300;
+			
+			strong {
+				//Жирное выделение в тексте
+				color: #fff;
+			}
+		}
+		&-button {
+			//Кнопка на слайдере
+			display: inline-block;
+			width: 140px;
+			vertical-align: middle;
+			padding: 16px;
+			background-color: $col-gold;
+			color: #fff;
+			text-decoration: none;
+			text-transform: uppercase;
+			font-size: 12px;
+			border: 2px solid transparent;
+			@include all-transition;
+			
+			&:hover {
+				//Наведение на кнопку слайдера
+				border-color: $col-gold;
+				background-color: transparent;
+			}
+		}
+	}
+
+	&__pagination {
+		//Пагинация
+		z-index: 10; //Устанавливает объект поверх сложного фона
+		position: absolute;
+		@include rel-top(800px);
+		@include rel-left(1200px);
+		
+		//Стрелка-слайдер
+		&-slider {
+			//контейнер для стрелки пагинации
+			position: relative;
+			display: inline-block;
+			height: 31px;
+			line-height: 31px;
+			vertical-align: middle;
+			margin-right: 13px;
+			margin-top: -4px;
+			
+			&::before {
+				//Древко стрелки пагинации
+				content: "";
+				display: inline-block;
+				width: 128px;
+				height: 1px;
+				line-height: 31px;
+				vertical-align: middle;
+				background-color: #fff;
+			}
+			&::after {
+				//Наконечник стрелки пагинации
+				content: "";
+				display: inline-block;
+				width: 0;
+				height: 0;
+				line-height: 31px;
+				//Треугольник вправо
+				border-style: solid;
+				border-top: transparent solid 3px;
+				border-bottom: transparent solid 3px;
+				border-right: transparent solid 0;
+				border-left: #fff solid 7px;
+			}
+			&-point {
+				//Кружек-ползунок на слайдере 
+				position: absolute;
+				top: 5px;
+				left: 31px;
+				width: 5px;
+				height: 5px;
+				padding: 8px;
+				border-radius: 50%;
+				background-color: $col-gold;
+				background-clip: content-box;
+				border: 1px solid $col-gold;
+				@include all-transition;
+				
+				&:hover {
+					//Наведение на кружек
+					transform: scale(1.2);
+					transform-origin: 50% 50%;
+				}
+			}
+		}
+		//----------
+		&-actual {
+			//Активная цифра пагинации
+			display: inline-block;
+			line-height: 31px;
+			vertical-align: middle;
+			margin-right: 13px;
+			font-family: "LibreBaskerville", serif;
+			font-size: 30px;
+			text-decoration: none;
+			color: $col-gold;
+		}
+		&-next-1 {
+			//Первая цифра пагинации после стрелки
+			display: inline-block;
+			line-height: 31px;
+			vertical-align: middle;
+			margin-right: 10px;
+			margin-top: 2px;
+			font-family: "LibreBaskerville", serif;
+			font-size: 22px;
+			text-decoration: none;
+			color: #fff;
+		}
+		&-next-2 {
+			//Вторая цифра пагинации после стрелки
+			display: inline-block;
+			line-height: 31px;
+			vertical-align: middle;
+			margin-right: 10px;
+			margin-top: 4px;
+			font-family: "LibreBaskerville", serif;
+			font-size: 16px;
+			text-decoration: none;
+			color: #fff;
+			opacity: 0.55;
+		}
+		&-next-3 {
+			//Третья цифра пагинации после стрелки
+			display: inline-block;
+			line-height: 31px;
+			vertical-align: middle;
+			margin-right: 10px;
+			margin-top: 4px;
+			font-family: "LibreBaskerville", serif;
+			font-size: 16px;
+			text-decoration: none;
+			color: #fff;
+			opacity: 0.35;
+		}
+	}
+
+	&__scroll {
+		//Кнопки скрола
+		display: block;
+		position: absolute;
+		bottom: 25px;
+		left: 50%;
+		margin-left: -8px;
+		height: 24px;
+		line-height: 24px;
+		vertical-align: middle;
+		font-family: "ProximaNova", sans-serif;
+		font-size: 12px;
+		text-decoration: none;
+		text-transform: uppercase;
+		font-weight: 400;
+		color: #fff;
+		padding-top: 4px;
+
+		&-icon {
+			//Иконка скрола
+			line-height: 24px;
+			vertical-align: middle;
+			display: inline-block;
+			width: 12px;
+			height: 20px;
+			margin-right: 14px;
+			margin-top: -4px;
+			border-radius: 8px;
+			border: 2px solid #fff;
+
+			&::before {
+				//Точка в кинке скрола
+				content: "";
+				display: block;
+				width: 2px;
+				height: 2px;
+				//border-radius: 50%;
+				background-color: #fff;
+				margin: 5px;
+				@include all-transition;
+			}
+		}
+		&:hover .start-screen__scroll-icon::before {
+			//Ховер точки в иконке скрола
+			transform: translateY(8px);
+		}
+	}
+}
+
+//----------
+%h2-title {
+	//Оформление глобальных заголовков 2 уровеня
+	font-family: 'LibreBaskerville', serif;
+	font-weight: 700;
+	font-size: 54px / $mockup-width * 100vw;
+	//font-size: 54px;
+	color: $col-gold;
+}
+%description {
+	//Оформление часто встречаемых подписей. Сделано без цвета, так как цвет везде разный
+	font-family: 'ProximaNova', sans-serif;
+	font-weight: 300;
+	font-size: 22px;
+}
+//-----------
+
+//Блок тригеров
+.trigger {
+	display: block;
+	position: relative;
+	margin: 0;
+	min-height: 870px / $mockup-height * 100vh;
+	overflow: hidden;
+
+	&__title {
+		//Заглавный блок
+		position: absolute;
+		width: 100%;
+		text-align: center;
+		top: 70px / $mockup-height * 100vh;
+		z-index: 20;
+
+		h2 {
+			//Заголовок
+			@extend %h2-title;
+			margin-top: 0;
+			margin-bottom: 13px;
+		}
+		p {
+			//Описацие
+			margin: 0;
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 300;
+			font-size: 22px;
+			color: $col-dark-blue;
+		}
+		&::after {
+			//Черточка-разделитель
+			content: "";
+			display: inline-block;
+			width: 18px;
+			height: 3px;
+			line-height: 3px;
+			margin-top: 33px;
+			background-color: $col-gold;
+		}
+	}
+	&__block{
+		//Контейнер непосредственно для триггеров
+		display: flex;
+		justify-content: space-between;
+		height: 100%;
+		min-height: 870px / $mockup-height * 100vh;
+		margin: 0px 15%;
+		&-item {
+			//Блок триггера
+			border-left: 1px solid rgba($col-dark-blue, 0.08);
+			padding-top: 310px / $mockup-height * 100vh;
+			padding-left: 10px;
+			padding-right: 10px;
+			@include rel-width(310px);
+			overflow: hidden;
+			position: relative;
+
+			&-number {
+				//Номер триггера
+				position: absolute;
+				bottom: 60 * 0.1vh;
+				right: 0;
+				width: 300px / $mockup-width * 100vw;
+				min-width: 300px;
+				font-family: 'LibreBaskerville', serif;
+				font-weight: 700;
+				font-size: 205px;
+				color: rgba($col-dark-blue, 0.05);
+			}
+			&-icon {
+				//Иконка триггера
+				height: 67px;
+			}
+			&-title {
+				//Заголовок траггера
+				font-family: 'ProximaNova';
+				font-weight: 700;
+				font-size: 22px;
+				color: $col-dark-blue;
+				margin: 40px 0 15px;
+			}
+			&-description {
+				//Описание триггера
+				font-family: 'ProximaNova';
+				font-weight: 300;
+				font-size: 16px;
+				color: rgba($col-dark-blue, 0.75);
+			}
+		}
+	}
+	//Декоративные квадраты
+	&::before {
+		//Прямоугольник влева
+		content: "";
+		display: block;
+		position: absolute;
+		top: 50%;
+		@include rel-width(80px);
+		height: 400px;
+		margin-top: -200px;
+		background-color: rgba($col-dark-blue, 0.08);
+		left: 0;
+		z-index: -10;
+	}
+	&::after {
+		//Прямоугольник справа
+		content: "";
+		display: block;
+		position: absolute;
+		top: 50%;
+		@include rel-width(80px);
+		height: 400px;
+		margin-top: -200px;
+		background-color: rgba($col-dark-blue, 0.08);
+		right: 0;
+		z-index: -10;
+	}
+	//----------
+}
+
+//Блок секвисов
+.service {
+	display: flex;
+	flex-wrap: wrap;
+	position: relative;
+	margin: 0;
+	min-height: 600px / $mockup-height * 100vh;
+	overflow: hidden;
+
+	&__item {
+		//Контейнер для сервиса
+		position: relative;
+		width: 50%;
+		min-width: 400px;
+		float: left;
+		box-sizing: border-box;
+		padding: 180px / $mockup-width * 100vw;
+
+		&::after {
+			//Создает тонирование внутрнеей части фона
+			content: "";
+			display: block;
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;			
+			background: rgba(24, 34, 41, 0.7);
+			z-index: 0;
+			@include all-transition;
+		}
+		&:hover::after {
+			//Ховер для тонирования
+			transform: scale(0.8);
+			transform-origin: 50% 50%;
+			background: rgba(24, 34, 41, 0.9);
+		}
+
+		&-title {
+			//Заголовок сервиса
+			position: relative;
+			z-index: 20; //Устанавливает объект поверх сложного фона
+			@extend %h2-title;
+			margin-top: 0;
+			margin-bottom: 13px;
+		}
+		&-description {
+			//Описание сервиса
+			position: relative;
+			z-index: 20; //Устанавливает объект поверх сложного фона
+			@extend %description;
+			color: #fff;
+			margin: 0;
+
+			&::after {
+				//Черточка разделитель полсе описания
+				content: "";
+				display: block;
+				width: 18px;
+				height: 3px;
+				margin: 35px 0 50px;
+				background-color: $col-gold;
+			}
+		}
+		&-link {
+			//Кнопка в сервесе
+			position: relative;
+			z-index: 20; //Устанавливает объект поверх сложного фона
+			display: inline-block;
+			width: 220px;
+			vertical-align: middle;
+			padding: 16px;
+			background-color: $col-gold;
+			color: #fff;
+			text-decoration: none;
+			text-transform: uppercase;
+			text-align: center;
+			font-size: 12px;
+			border: 2px solid transparent;
+			@include all-transition;
+
+			&:hover {
+				//Ховер на кнопке для сервиса
+				border-color: $col-gold;
+				background-color: transparent;
+			}
+		}
+	}
+	&__item:nth-child(1) {
+		//Фон для первого сервиса
+		background: url("../img/service-image-1.jpg") 50% 50% / cover no-repeat #182229 ;
+	}
+	&__item:nth-child(2) {
+		//Фон для второго сервиса
+		background: url("../img/service-image-2.jpg") 50% 50% / cover no-repeat #182229 ;
+	}
+}
+
+//Блок про компанию
+.about {
+	display: flex;
+	flex-wrap: wrap;
+	position: relative;
+	margin: 0;
+	min-height: 630px / $mockup-height * 100vh;
+	padding-left: 325px / $mockup-width * 100%;
+	overflow: hidden;
+
+	&__header {
+		//Контейнер заглавного блока
+		position: relative;
+		@include rel-width(720px);
+		border-right: 1px solid rgba($col-dark-blue, 0.1);
+		border-left: 1px solid rgba($col-dark-blue, 0.1);
+		padding: (160px / $mockup-height * 100vh) (60px / $mockup-width * 100%) 0;
+		
+		&-title {
+			//Заголовок про компанию
+			position: relative;
+			z-index: 20; //Устанавливает объект поверх сложного фона
+			@extend %h2-title;
+			margin-top: 0;
+			margin-bottom: 30px;
+		}
+		&-description {
+			//Описание подзаголовок про компанию
+			position: relative;
+			z-index: 20; //Устанавливает объект поверх сложного фона
+			@extend %description;
+			color: $col-dark-blue;
+			margin: 0;
+
+			&::after {
+				//Черточка разделитель полсе описания
+				content: "";
+				display: block;
+				width: 18px;
+				height: 3px;
+				margin: 35px 0 55px;
+				background-color: $col-gold;
+			}
+		}
+		&-link {
+			//Кнопка под заголовком
+			display: inline-block;
+			width: 140px;
+			vertical-align: middle;
+			padding: 16px;
+			background-color: $col-gold;
+			color: #fff;
+			text-decoration: none;
+			text-transform: uppercase;
+			font-size: 12px;
+			text-align: center;
+			border: 2px solid transparent;
+			@include all-transition;
+			
+			&:hover {
+				//Наведение на кнопку слайдера
+				color: $col-gold;
+				border-color: $col-gold;
+				background-color: transparent;
+			}
+		}
+
+		&::after {
+			//Средний квадрат фона
+			content: "";
+			display: block;
+			position: absolute;
+			width: 186px / $mockup-width * 100vw;
+			@include rel-vp-height(213px);
+			right: 0;
+			bottom: 70px / $mockup-height * 100vh;
+			background-color: rgba(243, 243, 243, 0.44);
+		}
+	}
+	&__content {
+		//Контейнер текстового блока
+		@include rel-width(550px);
+		padding: (160px / $mockup-height * 100vh) (60px / $mockup-width * 100%);
+
+		&-text {
+			//Контейнер для текста
+			position: relative;
+			z-index: 20; //Устанавливает объект поверх сложного фона
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 300;
+			font-size: 16px;
+			line-height: 26px;
+			color: rgba($col-dark-blue, 0.75);
+
+			a {
+				//Ссылки в тексте
+				font-weight: 700;
+				text-decoration: underline;
+				color: rgba($col-gold, 0.75);
+			}
+		}
+		&-pagination {
+			//Пагинация
+			position: absolute;
+			z-index: 20; //Устанавливает объект поверх сложного фона
+			bottom: 65px / $mockup-height * 100vh;
+			@include rel-left(1200px);
+			
+			//Стрелка-слайдер
+			&-slider {
+				//контейнер для стрелки пагинации
+				position: relative;
+				display: inline-block;
+				height: 31px;
+				line-height: 31px;
+				vertical-align: middle;
+				margin-right: 13px;
+				margin-top: -4px;
+				
+				&::before {
+					//Древко стрелки пагинации
+					content: "";
+					display: inline-block;
+					width: 128px;
+					height: 1px;
+					line-height: 31px;
+					vertical-align: middle;
+					background-color: rgba($col-dark-blue, 0.45);
+				}
+				&::after {
+					//Наконечник стрелки пагинации
+					content: "";
+					display: inline-block;
+					width: 0;
+					height: 0;
+					line-height: 31px;
+					//Треугольник вправо
+					border-style: solid;
+					border-top: transparent solid 3px;
+					border-bottom: transparent solid 3px;
+					border-right: transparent solid 0;
+					border-left: rgba($col-dark-blue, 0.45) solid 7px;
+				}
+				&-point {
+					//Кружек-ползунок на слайдере 
+					position: absolute;
+					top: 5px;
+					left: 31px;
+					width: 5px;
+					height: 5px;
+					padding: 8px;
+					border-radius: 50%;
+					background-color: $col-gold;
+					background-clip: content-box;
+					border: 1px solid $col-gold;
+					@include all-transition;
+					
+					&:hover {
+						//Наведение на кружек
+						transform: scale(1.2);
+						transform-origin: 50% 50%;
+					}
+				}
+			}
+			//----------
+			&-actual {
+				//Активная цифра пагинации
+				display: inline-block;
+				line-height: 31px;
+				vertical-align: middle;
+				margin-right: 13px;
+				font-family: "LibreBaskerville", serif;
+				font-size: 30px;
+				text-decoration: none;
+				color: $col-gold;
+			}
+			&-next-1 {
+				//Первая цифра пагинации после стрелки
+				display: inline-block;
+				line-height: 31px;
+				vertical-align: middle;
+				margin-right: 10px;
+				margin-top: 2px;
+				font-family: "LibreBaskerville", serif;
+				font-size: 22px;
+				text-decoration: none;
+				color: $col-dark-blue;
+			}
+			&-next-2 {
+				//Вторая цифра пагинации после стрелки
+				display: inline-block;
+				line-height: 31px;
+				vertical-align: middle;
+				margin-right: 10px;
+				margin-top: 4px;
+				font-family: "LibreBaskerville", serif;
+				font-size: 16px;
+				text-decoration: none;
+				color: $col-dark-blue;
+				opacity: 0.55;
+			}
+		}
+	}
+
+	&::before {
+		//Первый квадрат фона
+		content: "";
+		display: block;
+		position: absolute;
+		width: 611px / $mockup-width * 100vw;
+		@include rel-vp-height(390px);
+		left: 0;
+		top: 120px / $mockup-height * 100vh;
+		background-color: rgba(243, 243, 243, 1);
+	}
+	&::after {
+		//Последний квадрат фона
+		content: "";
+		display: block;
+		position: absolute;
+		width: 223px / $mockup-width * 100vw;
+		@include rel-vp-height(390px);
+		right: 0;
+		top: 71px / $mockup-height * 100vh;
+		background-color: rgba(243, 243, 243, 1);
+	}
+}
+
+//Блок отзывов
+.testimonials {
+	display: block;
+	position: relative;
+	left: 0;
+	right: 0;
+	top: 0;
+	width: 100%;
+	height: 850px / $mockup-height * 100vh;
+	margin: 0;
+	overflow: hidden;
+	background: url("../img/testimonials.jpg") 50% 50% / cover no-repeat #182229 ;
+	
+	&::before {
+		//Создает тонирование основного фона
+		content: "";
+		display: block;
+		position: absolute;
+		background: rgba(24, 34, 41, 0.97);
+		width: 100%;
+		height: 100%;
+	}
+
+	
+	//Создание сложного фона
+
+	&__edge {
+		//Горизонтальные линии
+		position: absolute;
+		left: 0;
+		right: 0;
+		width: 100%;
+		height: 100%;
+		padding: 0 (283px / $mockup-width * 100%);
+		box-sizing: border-box;
+		//Флекс для равномерного распределения линий 
+		display: flex;
+		justify-content: space-between;
+		//----------
+		&-item {
+			//Вертикальная линия
+			width: 1px;
+			height: 100%;
+			background-color: rgba(255, 255, 255, 0.1);
+			z-index: 10;
+		}
+	}
+	&__cell {
+		//Контейнер для анимироканных прямоугольников. 
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+		
+		&-1 {
+			//Прямоугольник фона
+			position: absolute;
+			@include rel-left(841px);
+			top: -1 * (229px / $mockup-height * 100vh);
+			@include rel-width(118px);
+			height: 229px / $mockup-height * 100vh;
+			background-color: rgba(255, 255, 255, 0.08); 
+			//Параметры анимации
+			animation-name: cell-ani;
+			animation-delay: 2s;
+			animation-duration: 24s;
+			animation-iteration-count: infinite;
+			animation-direction: normal;
+			animation-timing-function: cubic-bezier(0,.3,1,.7);
+		}
+		&-2 {
+			//Прямоугольник фона
+			position: absolute;
+			@include rel-left(960px);
+			top: -1 * (245px / $mockup-height * 100vh);
+			@include rel-width(225px);
+			height: 245px / $mockup-height * 100vh;
+			background-color: rgba(255, 255, 255, 0.08); 
+			//Параметры анимации
+			animation-name: cell-ani;
+			animation-delay: 4s;
+			animation-duration: 14s;
+			animation-iteration-count: infinite;
+			animation-direction: normal;
+			animation-timing-function: cubic-bezier(0,.3,1,.7);
+		}
+		&-3 {
+			//Прямоугольник фона
+			position: absolute;
+			@include rel-left(1636px);
+			top: -1 * (173px / $mockup-height * 100vh);
+			@include rel-width(282px);
+			height: 173px / $mockup-height * 100vh;
+			background-color: rgba(255, 255, 255, 0.1); 
+			//Параметры анимации
+			animation-name: cell-ani;
+			animation-delay: 0s;
+			animation-duration: 60s;
+			animation-iteration-count: infinite;
+			animation-direction: normal;
+			animation-timing-function: cubic-bezier(0,.3,1,.7);
+		}
+	}
+	//----------
+
+	&__title {
+		//Заглавный блок
+		position: absolute;
+		width: 100%;
+		text-align: center;
+		top: 70px / $mockup-height * 100vh;
+		z-index: 20;
+
+		h2 {
+			//Заголовок
+			@extend %h2-title;
+			margin-top: 0;
+			margin-bottom: 13px;
+		}
+		p {
+			//Описацие
+			margin: 0;
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 300;
+			font-size: 22px;
+			color: #fff;
+		}
+		&::after {
+			//Черточка-разделитель
+			content: "";
+			display: inline-block;
+			width: 18px;
+			height: 3px;
+			line-height: 3px;
+			margin-top: 33px;
+			background-color: $col-gold;
+		}
+	}
+	&__card {
+		//Главная карточка отзывов
+		position: absolute;
+		z-index: 20;		
+		top: 320px / $mockup-width * 100vw;
+		left: 50%;
+		margin-left: -342px / $mockup-width * 100%;
+		@include rel-width(684px);
+		min-height: 331px / $mockup-height * 100vh;
+		padding: (40px / $mockup-width * 100vw) (45px / $mockup-width * 100vw);
+		box-sizing: border-box;
+		background-color: #fff;
+
+		&-time {
+			//Дата отзыва
+			float: right;
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 300;
+			font-size: 16px;
+			color: rgba($col-dark-blue, 0.45);
+		}
+		&-autor {
+			//Автор отзыва
+			margin: 0 0 13px;
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 700;
+			font-size: 32px / $mockup-width * 100vw;
+			color: $col-dark-blue;
+		}
+		&-status {
+			//Статус автора
+			margin: 0;
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 300;
+			font-size: 16px;
+			color: rgba($col-dark-blue, 0.6);
+		}
+		hr {
+			//Разделительная линия
+			border-color: $col-gold;
+			border-style: solid;
+			border-width: 1px 0 0 0;
+			margin: (18px / $mockup-width * 100vw) 0 (45px / $mockup-width * 100vw);
+		}
+		&-text {
+			//Текст отзыва
+			margin: 0;
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 300;
+			font-size: 16px;
+			line-height: 26px ;
+			color: rgba($col-dark-blue, 0.75);
+		}
+	}
+
+	//Свойство для левой и правой карточки
+	&__card.left {
+		left: 10%;
+		opacity: 0.45;
+	}
+	&__card.right {
+		left: 90%;
+		opacity: 0.45;
+	}
+	//----------
+
+	&__pagination {
+		//Пагинация
+		z-index: 30; //Устанавливает объект поверх сложного фона
+		position: absolute;
+		bottom: 65px / $mockup-height * 100vh;
+		@include rel-left(1200px);
+		
+		//Стрелка-слайдер
+		&-slider {
+			//контейнер для стрелки пагинации
+			position: relative;
+			display: inline-block;
+			height: 31px;
+			line-height: 31px;
+			vertical-align: middle;
+			margin-right: 13px;
+			margin-top: -4px;
+			
+			&::before {
+				//Древко стрелки пагинации
+				content: "";
+				display: inline-block;
+				width: 128px;
+				height: 1px;
+				line-height: 31px;
+				vertical-align: middle;
+				background-color: #fff;
+			}
+			&::after {
+				//Наконечник стрелки пагинации
+				content: "";
+				display: inline-block;
+				width: 0;
+				height: 0;
+				line-height: 31px;
+				//Треугольник вправо
+				border-style: solid;
+				border-top: transparent solid 3px;
+				border-bottom: transparent solid 3px;
+				border-right: transparent solid 0;
+				border-left: #fff solid 7px;
+			}
+			&-point {
+				//Кружек-ползунок на слайдере 
+				position: absolute;
+				top: 5px;
+				left: 31px;
+				width: 5px;
+				height: 5px;
+				padding: 8px;
+				border-radius: 50%;
+				background-color: $col-gold;
+				background-clip: content-box;
+				border: 1px solid $col-gold;
+				@include all-transition;
+				
+				&:hover {
+					//Наведение на кружек
+					transform: scale(1.2);
+					transform-origin: 50% 50%;
+				}
+			}
+		}
+		//----------
+		&-actual {
+			//Активная цифра пагинации
+			display: inline-block;
+			line-height: 31px;
+			vertical-align: middle;
+			margin-right: 13px;
+			font-family: "LibreBaskerville", serif;
+			font-size: 30px;
+			text-decoration: none;
+			color: $col-gold;
+		}
+		&-next-1 {
+			//Первая цифра пагинации после стрелки
+			display: inline-block;
+			line-height: 31px;
+			vertical-align: middle;
+			margin-right: 10px;
+			margin-top: 2px;
+			font-family: "LibreBaskerville", serif;
+			font-size: 22px;
+			text-decoration: none;
+			color: #fff;
+		}
+		&-next-2 {
+			//Вторая цифра пагинации после стрелки
+			display: inline-block;
+			line-height: 31px;
+			vertical-align: middle;
+			margin-right: 10px;
+			margin-top: 4px;
+			font-family: "LibreBaskerville", serif;
+			font-size: 16px;
+			text-decoration: none;
+			color: #fff;
+			opacity: 0.55;
+		}
+	}
+}
+
+//Блок с формой 
+.form {
+	display: block;
+	position: relative;
+	margin: 0;
+	height: 750px / $mockup-height * 100vh;
+	overflow: hidden;
+
+
+	&::before {
+		//Квадрат фона
+		content: "";
+		display: block;
+		position: absolute;
+		width: 313px / $mockup-width * 100vw;
+		@include rel-vp-height(212px);
+		left: 590px / $mockup-width * 100vw;
+		background-color: rgba($col-dark-blue, 0.05);
+	}
+
+
+	&__title {
+		//Заглавный блок
+		position: relative;
+		width: 100%;
+		text-align: center;
+		margin-top: 70px / $mockup-height * 100vh;
+		z-index: 20;
+
+		h2 {
+			//Заголовок
+			@extend %h2-title;
+			margin-top: 0;
+			margin-bottom: 13px;
+		}
+		p {
+			//Описацие
+			margin: 0;
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 300;
+			font-size: 22px;
+			color: $col-dark-blue;
+		}
+		&::after {
+			//Черточка-разделитель
+			content: "";
+			display: inline-block;
+			width: 18px;
+			height: 3px;
+			line-height: 3px;
+			margin-top: 33px;
+			background-color: $col-gold;
+		}
+	}
+	&__input {
+		//Контейнер формы
+		position: relative;
+		margin: (70px / $mockup-height * 100vh)  (485px / $mockup-width * 100vw);
+		z-index: 20;
+
+		input {
+			//Стили одстрочных полей
+			display: block;
+			width: 422px / $mockup-width * 100vw;
+			height: 44px;
+			line-height: 44px;
+			vertical-align: middle;
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 300;
+			font-size: 22px;
+			color: rgba($col-dark-blue, 0.45);
+			border-top: none;
+			border-left: none;
+			border-right: none;
+			border-bottom: 1px solid $col-dark-blue;
+
+			&:focus {
+				//Стиль при наведении на однострочное поле
+				color: $col-gold;
+				border-bottom: 1px solid $col-gold;
+				outline: none;
+			}
+		}
+		#name {float: left;} //Поле для имени
+		#email {float: right;} //Поле для емайла
+		#message {
+			//Многострочное поле сообщения
+			width: 100%;
+			min-height: 135px;
+			margin: (70px / $mockup-height * 100vh) 0;
+			border: none;
+			line-height: 44px;
+			vertical-align: middle;
+			font-family: 'ProximaNova', sans-serif;
+			font-weight: 300;
+			font-size: 22px;
+			color: rgba($col-dark-blue, 0.45);
+			background-image: repeating-linear-gradient(#fff, #fff 44px, $col-dark-blue 44px,  $col-dark-blue 45px);
+			resize: none;
+			overflow: hidden;
+
+			&:focus {
+				//Стиль при наведении на многострочного поля
+				color: $col-gold;
+				background-image: repeating-linear-gradient(#fff, #fff 44px, $col-gold 44px,  $col-gold 45px);
+				outline: none;
+			}
+		}
+		#send {
+			//Кнопка отправки
+			display: block;
+			width: 140px;
+			vertical-align: middle;
+			padding: 16px;
+			background-color: $col-gold;
+			color: #fff;
+			text-decoration: none;
+			text-transform: uppercase;
+			font-size: 12px;
+			text-align: center;
+			border: 2px solid transparent;
+			@include all-transition;
+			
+			&:hover {
+				//Наведение на кнопку слайдера
+				color: $col-gold;
+				border-color: $col-gold;
+				background-color: transparent;
+			}
+		}
+	}
+}
+
+//Футер
+.footer {
+	display: block;
+	position: relative;
+	margin: 0;
+	height: 113px / $mockup-height * 100vh;
+	overflow: hidden;
+	background-color: $col-dark-blue;
+
+	//Создание сложного фона
+	&::before {
+		//Прямоугольник на фоне
+		content: "";
+		display: block;
+		position: absolute;
+		@include rel-left(754px);
+		top: 0;
+		@include rel-width(413px);
+		height: 100%;
+		background-color: rgba(255, 255, 255, 0.08);
+		z-index: 10;
+	}
+	&__edge {
+		//Горизонтальные линии
+		position: absolute;
+		left: 0;
+		right: 0;
+		width: 100%;
+		height: 100%;
+		padding: 0 (341px / $mockup-width * 100%);
+		box-sizing: border-box;
+		z-index: 20;
+		//Флекс для равномерного распределения линий 
+		display: flex;
+		justify-content: space-between;
+		//----------
+		&-item {
+			//Вертикальная линия
+			width: 1px;
+			height: 100%;
+			background-color: rgba(255, 255, 255, 0.1);
+			z-index: 10;
+		}
+	}
+	//----------
+	
+	&__social {
+		//Контейнер для социальных сетей
+		position: absolute;
+		@include rel-left(80px);
+		top: 0;
+		height: 100%;
+		z-index: 30;
+		text-align: left;
+		line-height: 113px / $mockup-height * 100vh;
+		vertical-align: middle;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+
+		&-item {
+			//Элемент списка социальных сетей
+			display: inline-block;
+			margin-right: 60px / $mockup-width * 100vw;
+
+			&-behance {
+				//Ссылка на Behance
+				display: inline-block;
+				line-height: 20px;
+				vertical-align: middle;
+
+				.icon {	
+					//Иконка				
+					fill: rgba(255, 255, 255, 0.65);
+					height: 12px;
+					@include all-transition;
+				}
+				&:hover {
+					.icon {
+						fill: $col-gold;
+					}
+				}
+			}
+			&-instagram {
+				//Ссылка на Instagram
+				display: inline-block;
+				line-height: 20px;
+				vertical-align: middle;
+
+				.icon {
+					//Иконка					
+					fill: rgba(255, 255, 255, 0.65);
+					height: 17px;
+					@include all-transition;
+				}
+				&:hover {
+					.icon {
+						fill: $col-gold;
+					}
+				}
+			}
+			&-share {
+				//Ссылка Share
+				display: inline-block;
+				line-height: 20px;
+				vertical-align: middle;
+
+				.icon {
+					//Иконка					
+					fill: rgba(255, 255, 255, 0.65);
+					height: 18px;
+					@include all-transition;
+				}
+				&:hover {
+					.icon {
+						fill: $col-gold;
+					}
+				}
+			}
+		}	
+	}
+	&__logo {
+		//Логопи в главном меню
+		position: absolute;
+		left: 50%;
+		top: 40px / $mockup-height * 100vh;
+		width: 143px;
+		height: 36px;
+		margin: 0 0 0 -72px;
+		padding: 0;
+		z-index: 30;
+
+		&-img {
+			//Изображение логотипа
+			width: 143px;
+			height: 36px;
+		}
+	}
+	&__copyright {
+		//Копирайт
+		position: absolute;
+		@include rel-right(80px);
+		top: 0;
+		height: 100%;
+		z-index: 30;
+		text-align: right;
+		line-height: 113px / $mockup-height * 100vh;
+		vertical-align: middle;
+		font-family: 'ProximaNova', sans-serif;
+		font-weight: 300;
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.6);
+	}
+}
